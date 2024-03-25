@@ -20,8 +20,6 @@ public class LogOutJDialog extends JDialog {
     }
 
     private void initComponents() {
-        // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents  @formatter:off
-        // Generated using JFormDesigner Evaluation license - jiajun Liu
         panel1 = new JPanel();
         label1 = new JLabel();
         label2 = new JLabel();
