@@ -1,6 +1,8 @@
 package ui.user;
 
-import view.element.FocusButton;
+
+
+import ui.element.FocusButton;
 
 import javax.swing.*;
 import java.awt.*;
@@ -97,6 +99,5 @@ public class WriteCommentJFrame extends JFrame {
         }
         pack();
         setLocationRelativeTo(getOwner());
-        // JFormDesigner - End of component initialization  //GEN-END:initComponents  @formatter:on
     }
 }

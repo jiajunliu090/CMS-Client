@@ -1,14 +1,12 @@
 package ui.user;
 
-import model.Captcha;
-import service.UserService;
-import utilities.CaptchaGenerator;
-import view.element.FocusButton;
-import view.element.MyJTextField;
+import ui.element.FocusButton;
+import ui.element.MyJTextField;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 
 public class SignInForMeetingJDialog extends JDialog {
     private JPanel panel1;
@@ -16,12 +14,10 @@ public class SignInForMeetingJDialog extends JDialog {
     private JLabel signInIcon;
     private MyJTextField codeField;
     private FocusButton submitButton;
-    private Captcha captcha;
-    private UserService userService;
+    private BufferedImage captchaImage;
     private String meeting_ID;
-    public SignInForMeetingJDialog(Window owner, UserService userService, String meeting_ID) {
+    public SignInForMeetingJDialog(Window owner, String meeting_ID) {
         super(owner);
-        this.userService = userService;
         this.meeting_ID = meeting_ID;
         initComponents();
     }
@@ -32,7 +28,7 @@ public class SignInForMeetingJDialog extends JDialog {
         signInIcon = new JLabel();
         codeField = new MyJTextField();
         submitButton = new FocusButton();
-        captcha = CaptchaGenerator.generateCaptcha();
+
         //======== this ========
         setTitle("\u4f1a\u8bae\u7b7e\u5230");
         var contentPane = getContentPane();
@@ -56,7 +52,7 @@ public class SignInForMeetingJDialog extends JDialog {
             signInLabel.setForeground(new Color(0xcccccc));
             panel1.add(signInLabel);
             signInLabel.setBounds(195, 55, 170, 40);
-            signInIcon.setIcon(new ImageIcon(captcha.getImage()));
+            signInIcon.setIcon(new ImageIcon(captchaImage));
             panel1.add(signInIcon);
             signInIcon.setBounds(40, 40, 185, 135);
             panel1.add(codeField);
@@ -69,12 +65,9 @@ public class SignInForMeetingJDialog extends JDialog {
             submitButton.addActionListener(new AbstractAction() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if (codeField.getText().equals(captcha.getCode())) {
-                        if(userService.signInMeeting(meeting_ID)) {
-                            // 弹出签到成功的画面
-                            System.out.println("签到成功");
-                        }
-                    }
+                    //if () {
+                    //    // 去服务端签到，成功后去出现成功的画面
+                    //}
                 }
             });
             panel1.add(submitButton);

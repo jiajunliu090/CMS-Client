@@ -1,6 +1,6 @@
 package ui.user;
 
-import view.element.FocusButton;
+import ui.element.FocusButton;
 
 import javax.swing.*;
 import java.awt.*;

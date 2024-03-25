@@ -1,7 +1,8 @@
 package ui.user;
 
-import view.element.FocusButton;
-import view.element.MyJTextField;
+
+import ui.element.FocusButton;
+import ui.element.MyJTextField;
 
 import javax.swing.*;
 import java.awt.*;

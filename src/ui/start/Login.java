@@ -5,6 +5,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
@@ -19,16 +22,17 @@ public class Login extends JFrame {
     private PrintWriter out;
     JTextField userNameField = new FocusableBorderTextField(20);
     JPasswordField passWordField = new FocusableBorderPasswordField(20);
-    UserService userService = new UserServiceImpl();
-    AdminService adminService = new AdminServiceImpl();
-
     {
         setBounds(500, 300, 480, 300);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
-    public Login() {
+    public Login() throws IOException {
         //设置窗口标题
         this.setTitle("会议管理系统");
+        socket = new Socket("localhost", 12345);
+        out = new PrintWriter(socket.getOutputStream(), true);
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
         //设置窗口大小
         Font font = new Font("楷体",Font.PLAIN,16);
         //添加一个面板作为容器
@@ -65,27 +69,69 @@ public class Login extends JFrame {
         jLabel3.setFont(font);
 
         //
+
         managerLogin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (test() && adminService.login(userNameField.getText(), passWordField.getText())) {
-                    // 管理员登录成功 新建一个管理员界面
-                    AdminUI adminUI = new AdminUI(userService, adminService);
-                    adminUI.setVisible(true);
-                    adminUI.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                if (test()) {
+                    String userName = userNameField.getText().trim();
+                    String passWord = passWordField.getText().trim();
+                    out.println("AdminLogin"); // 发送登录类型标识
+                    out.println(userName); // 发送用户名
+                    out.println(passWord); // 发送密码
+                    out.flush(); // 确保数据发送到服务器
+
+                    String response = null; // 从服务器接收响应
+                    try {
+                        response = in.readLine();
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    if ("LoginSuccess".equals(response)) {
+                        // 管理员登录成功，执行下一步操作
+                        AdminUI adminUI = new AdminUI();
+                        adminUI.setVisible(true);
+                        adminUI.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    } else {
+                        // 管理员登录失败，显示错误消息
+                        JOptionPane.showMessageDialog(null, "管理员登录失败");
+                    }
                 }
+
             }
         });
         userLogin.addActionListener(new ActionListener() {
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (test()) {
-                    if (socket.)
-                    // 登录成功后 新建用户UI
-                    UserUI userUI = new UserUI(userService);
-                    userUI.setVisible(true);
-                    // 设置默认关闭行为
-                    userUI.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    String userName = userNameField.getText().trim();
+                    String passWord = passWordField.getText().trim();
+                    out.println("UserLogin"); // 发送登录类型标识
+                    out.println(userName); // 发送用户名
+                    out.println(passWord); // 发送密码
+                    out.flush(); // 确保数据发送到服务器
+
+                    String response = null; // 从服务器接收响应
+                    try {
+                        response = in.readLine();
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                    if ("LoginSuccess".equals(response)) {
+                        // 用户登录成功，执行下一步操作
+                        UserUI userUI = null;
+                        try {
+                            userUI = new UserUI(userName);
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                        userUI.setVisible(true);
+                        userUI.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    } else {
+                        // 用户登录失败，显示错误消息
+                        JOptionPane.showMessageDialog(null, "用户登录失败");
+                    }
                 }
             }
         });

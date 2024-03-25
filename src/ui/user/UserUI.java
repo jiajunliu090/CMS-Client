@@ -1,35 +1,28 @@
 package ui.user;
 
-import model.User;
-import service.UserService;
-import service.impl.UserServiceImpl;
-import utilities.DateTimeUtils;
-import utilities.TableGenerator;
-import view.element.FocusButton;
-import view.element.MyJTextField;
+
+import ui.element.FocusButton;
+import ui.element.MyJTextField;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.InputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
-import java.sql.PreparedStatement;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
-import javax.swing.event.AncestorEvent;
-import javax.swing.event.AncestorListener;
 
 public class UserUI extends JFrame {
-    UserService userService;
-    User loginUser;
+    private String loginUser_id;
     private Socket socket;
+    private BufferedReader in;
     private PrintWriter out;
     private JTabbedPane tabbedPane1;
     private JPanel StartPanel;
@@ -88,9 +81,12 @@ public class UserUI extends JFrame {
     private FocusButton logOutAccount;
     private FocusButton infoUpdateButton;
 
-    public UserUI(UserService userService) {
-        this.userService = userService;
-        loginUser = userService.getLoginUser();
+    public UserUI(String loginUser_id) throws IOException {
+
+        this.loginUser_id = loginUser_id;
+        socket = new Socket("localhost", 12345);
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out = new PrintWriter(socket.getOutputStream(), true);
         tabbedPane1 = new JTabbedPane();
         StartPanel = new JPanel();
         panel3 = new JPanel();
@@ -149,7 +145,7 @@ public class UserUI extends JFrame {
         infoUpdateButton = new FocusButton();
         // 加载图片
         try {
-            InputStream stream = UserUI.class.getResourceAsStream("/resources/image/icons8-search-36(1).png");
+            InputStream stream = UserUI.class.getResourceAsStream("icons8-search-36(1).png");
             BufferedImage image = ImageIO.read(stream);
             searchIcon.setIcon(new ImageIcon(image));
         }catch (Exception e) {
@@ -201,19 +197,38 @@ public class UserUI extends JFrame {
                     positionLabel.setBounds(60, 120, 170, 30);
 
                     //---- nameLabel2 ----
-                    nameLabel2.setText(loginUser.getName());
+                    out.println("getLoginUser_name"); // 发送获取标识
+                    out.println(loginUser_id); // 发送用户ID信息
+                    out.flush();
+                    String type = in.readLine(); // 获取返回后的类型
+                    if (type.equals("ReturnUserName")) {
+                        String name = in.readLine();
+                        nameLabel2.setText(name);
+                    }
                     nameLabel2.setForeground(Color.lightGray);
                     panel3.add(nameLabel2);
                     nameLabel2.setBounds(255, 30, 75, 30);
 
                     //---- meetingNameLabel2 ----
-                    meetingNameLabel2.setText(loginUser.getMeetingName());
+                    out.println("getLoginUser_meetingName"); // 发送会议昵称获取标识
+                    out.println(loginUser_id); // 发送用户ID信息
+                    out.flush();
+                    String meeting_name_response = in.readLine();
+                    if (meeting_name_response.equals("ReturnUserMeetingName")) {
+                        meetingNameLabel2.setText(in.readLine()); // 下一行就会是会议昵称
+                    }
                     meetingNameLabel2.setForeground(Color.lightGray);
                     panel3.add(meetingNameLabel2);
                     meetingNameLabel2.setBounds(255, 75, 75, 30);
 
                     //---- positionLabel2 ----
-                    positionLabel2.setText(loginUser.getPosition());
+                    out.println("getLoginUser_position");
+                    out.println(loginUser_id);
+                    out.flush();
+                    String position_response = in.readLine();
+                    if (position_response.equals("ReturnUser_position")) {
+                        positionLabel2.setText(in.readLine());
+                    }
                     positionLabel2.setForeground(Color.lightGray);
                     panel3.add(positionLabel2);
                     positionLabel2.setBounds(255, 120, 75, 30);
@@ -225,10 +240,11 @@ public class UserUI extends JFrame {
                     timeLabel.setBounds(375, 15, 165, 30);
 
                     //---- TimeLabel2 ----
-                    TimeLabel2.setText(DateTimeUtils.toUserInput(LocalDateTime.now()));
+                    String nowTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+                    TimeLabel2.setText(nowTime);
                     TimeLabel2.setForeground(Color.lightGray);
                     panel3.add(TimeLabel2);
-                    TimeLabel2.setBounds(590, 15, 75, 30);
+                    TimeLabel2.setBounds(550, 15, 120, 30);
                     panel3.add(searchField);
                     searchField.setBounds(375, 105, 225, 50);
 
@@ -253,10 +269,10 @@ public class UserUI extends JFrame {
                     searchIcon.setBounds(605, 110, 40, 40);
 
                     //---- searchLabel ----
-                    searchLabel.setText("输入会议ID搜索/input meeting_ID do search");
+                    searchLabel.setText("输入会议ID搜索/input meeting_ID do search：");
                     searchLabel.setForeground(Color.lightGray);
                     panel3.add(searchLabel);
-                    searchLabel.setBounds(375, 55, 315, 45);
+                    searchLabel.setBounds(375, 55, 320, 45);
 
                     {
                         // compute preferred size
@@ -291,7 +307,7 @@ public class UserUI extends JFrame {
                     {
 
                         //---- conferenceTable ----
-                        conferenceTable.setModel(TableGenerator.generateComingMeetingTable(loginUser.getUser_ID()));
+                        //conferenceTable.setModel();
                         conferenceTable.setForeground(Color.lightGray);
                         conferenceTable.setBackground(Color.darkGray);
                         conferenceTable.setBorder(new LineBorder(Color.gray, 2, true));
@@ -307,7 +323,7 @@ public class UserUI extends JFrame {
                     startUser_IDLabel.setBounds(0, 240, 105, 40);
 
                     //---- startUser_IDLabel2 ----
-                    startUser_IDLabel2.setText(loginUser.getUser_ID());
+                    startUser_IDLabel2.setText(loginUser_id);
                     startUser_IDLabel2.setForeground(new Color(0x333333));
                     panel4.add(startUser_IDLabel2);
                     startUser_IDLabel2.setBounds(125, 240, 90, 40);
@@ -399,20 +415,20 @@ public class UserUI extends JFrame {
                             String participants = participantsField.getText();
                             String meeting_time = meetingTimeField.getText();
                             List<String> participants_name = Arrays.stream(participants.split(",")).toList();
-                            String room_ID = userService.getAvailableRoom_ID();
+
                             //System.out.println("meeting_id : " + meeting_id);
                             //System.out.println("participants : " + participants);
                             //System.out.println("meeting_time : " + meeting_time);
                             //System.out.println(participants_name);
                             //System.out.println("format_time : " + DateTimeUtils.fromUserInput(meeting_time));
                             // 先创建会议
-                            System.out.println("room_id : " + room_ID);
-                            if (userService.createConference(meeting_id, room_ID, participants_name, DateTimeUtils.fromUserInput(meeting_time))) {
-                                System.out.println("创建成功");
-                                // 弹出成功画面
-                                CreateMeetingJDialog createMeetingJDialog = new CreateMeetingJDialog(UserUI.this, room_ID);
-                                createMeetingJDialog.setVisible(true);
-                            }
+
+                            //if (userService.createConference(meeting_id, room_ID, participants_name, DateTimeUtils.fromUserInput(meeting_time))) {
+                            //    System.out.println("创建成功");
+                            //    // 弹出成功画面
+                            //    CreateMeetingJDialog createMeetingJDialog = new CreateMeetingJDialog(UserUI.this, room_ID);
+                            //    createMeetingJDialog.setVisible(true);
+                            //}
                         }
                     });
                     panel5.add(createMeetingButton);
@@ -445,7 +461,7 @@ public class UserUI extends JFrame {
                     {
 
                         //---- conferenceTable2 ----
-                        conferenceTable2.setModel(TableGenerator.generateMeetingInfoTable(loginUser.getUser_ID()));
+                        //conferenceTable2.setModel();
                         conferenceTable2.setForeground(Color.lightGray);
                         conferenceTable2.setBackground(Color.darkGray);
                         conferenceTable2.setBorder(new LineBorder(Color.gray, 2, true));
@@ -469,11 +485,7 @@ public class UserUI extends JFrame {
                         public void actionPerformed(ActionEvent e) {
                             // 签到按钮
                             // 弹出验证界面
-                            SignInForMeetingJDialog signInForMeetingJDialog = new SignInForMeetingJDialog(UserUI.this,
-                                    userService,
-                                    // 获得选中的会议IDconferenceTable2.getValueAt(conferenceTable2.getSelectedRow(), 0).toString()
-                                    "muggleee");
-                            signInForMeetingJDialog.setVisible(true);
+
                         }
                     });
                     panel6.add(signInButton);

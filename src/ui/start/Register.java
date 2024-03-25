@@ -1,14 +1,14 @@
 package ui.start;
 
-import service.UserService;
-import service.impl.UserServiceImpl;
-import view.element.FocusButton;
-import view.element.FocusableBorderPasswordField;
-import view.element.FocusableBorderTextField;
+
+import ui.element.FocusButton;
+import ui.element.FocusableBorderPasswordField;
+import ui.element.FocusableBorderTextField;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 public class Register extends JFrame {
     JTextField userNameField = new FocusableBorderTextField(20);
@@ -18,7 +18,6 @@ public class Register extends JFrame {
     //将复选框加入容器
     JCheckBox agreeField = new JCheckBox("同意用户协议");
     FocusButton nextButton = new FocusButton("下一步");
-    UserService userService = new UserServiceImpl();
 
     {
         setBounds(450, 200, 545,540);
@@ -80,9 +79,14 @@ public class Register extends JFrame {
         nextButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (test() && userService.registerUser(userNameField.getText(), passWordField.getPassword().toString(), nameField.getText())) {
+                if (test()) {
                     System.out.println("注册成功");
-                    Login login = new Login();
+                    Login login = null;
+                    try {
+                        login = new Login();
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
                     login.setVisible(true);
 
                 }

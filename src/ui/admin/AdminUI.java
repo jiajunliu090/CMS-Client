@@ -1,15 +1,11 @@
 package ui.admin;
 
-import service.AdminService;
-import service.UserService;
-import view.user.UserUI;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class AdminUI extends JFrame {
-    UserService userService;
-    AdminService adminService;
+
     private JTabbedPane tabbedPane1;
     private JPanel panel4;
     private JLabel admin_IDLabel;
@@ -37,9 +33,8 @@ public class AdminUI extends JFrame {
     private JLabel searchUserIcon;
     private JButton addUserButton;
     private JButton deleteUserButton;
-    public AdminUI(UserService userService, AdminService adminService) {
-        this.userService = userService;
-        this.adminService = adminService;
+    public AdminUI() {
+
         tabbedPane1 = new JTabbedPane();
         panel4 = new JPanel();
         admin_IDLabel = new JLabel();
