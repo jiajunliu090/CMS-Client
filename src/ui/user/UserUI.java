@@ -561,23 +561,28 @@ public class UserUI extends JFrame {
                             String select_meeting_ID = (String) conferenceTable2.getValueAt(conferenceTable2.getSelectedRow(), 0);
                             out.println("removeFromMeeting"); // 发送移除标识
                             out.println(select_meeting_ID); // 发送会议id
-                            out.println(loginUser_id);
                             out.flush();
+
                             try {
-                                String returnType = in.readLine();
+                                String returnType = in.readLine(); // 读取服务器响应
                                 if (returnType.equals("removeSuccess")) {
-                                    System.out.println(returnType);
                                     // 弹出移除成功
                                     JOptionPane.showMessageDialog(null, "移除成功");
+
+                                    out.println("resetTable");
+                                    out.println(loginUser_id);
+                                    out.flush();
+                                    // 接收表格数据
                                     ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-                                    TableModel tableModel = (TableModel) inputStream.readObject(); // 接收表格数据
-                                    conferenceTable.setModel(tableModel); // 设置表格数据
+                                    TableModel tableModel = (TableModel) inputStream.readObject();
+                                    conferenceTable.setModel(tableModel);
                                     conferenceTable.repaint();
-                                    TableModel tableModel2 = (TableModel) inputStream.readObject(); // 接收第二个表格数据
-                                    conferenceTable2.setModel(tableModel2); // 设置第二个表格数据
+
+                                    // 接收第二个表格数据
+                                    TableModel tableModel2 = (TableModel) inputStream.readObject();
+                                    conferenceTable2.setModel(tableModel2);
                                     conferenceTable2.repaint();
-                                }else if (returnType.equals("removeFail")) {
-                                    System.out.println(returnType);
+                                } else if (returnType.equals("removeFail")) {
                                     // 弹出移除失败
                                     JOptionPane.showMessageDialog(null, "移除失败");
                                 }
@@ -728,18 +733,46 @@ public class UserUI extends JFrame {
                     infoPasswordLabel.setForeground(Color.white);
                     userInfoPanel.add(infoPasswordLabel);
                     infoPasswordLabel.setBounds(130, 285, 155, 25);
+                    out.println("getLoginUser_name");
+                    out.println(loginUser_id);
+                    out.flush();
+                    String returnType = in.readLine();
+                    if (returnType.equals("ReturnUserName")) {
+                        infoNameField.setText(in.readLine());
+                    }
                     userInfoPanel.add(infoNameField);
                     infoNameField.setBounds(180, 105, 180, infoNameField.getPreferredSize().height);
+                    out.println("getLoginUser_meetingName");
+                    out.println(loginUser_id);
+                    out.flush();
+                    String returnType1 = in.readLine();
+                    if (returnType1.equals("ReturnUserMeetingName")) {
+                        infoMeetingNameField.setText(in.readLine());
+                    }
                     userInfoPanel.add(infoMeetingNameField);
                     infoMeetingNameField.setBounds(180, 175, 180, infoMeetingNameField.getPreferredSize().height);
+                    out.println("getLoginUser_position");
+                    out.println(loginUser_id);
+                    out.flush();
+                    String returnType2 = in.readLine();
+                    if (returnType2.equals("ReturnUser_position")) {
+                        infoPositionField.setText(in.readLine());
+                    }
                     userInfoPanel.add(infoPositionField);
                     infoPositionField.setBounds(180, 245, 180, infoPositionField.getPreferredSize().height);
+                    out.println("getLoginUser_password");
+                    out.println(loginUser_id);
+                    out.flush();
+                    String returnType3 = in.readLine();
+                    if (returnType3.equals("ReturnU_password")) {
+                        infoPasswordField.setText(in.readLine());
+                    }
                     userInfoPanel.add(infoPasswordField);
                     infoPasswordField.setBounds(180, 320, 180, infoPasswordField.getPreferredSize().height);
 
                     //---- user_IDLabel2 ----
                     user_IDLabel2.setForeground(Color.white);
-                    user_IDLabel2.setText("text");
+                    user_IDLabel2.setText(loginUser_id);
                     userInfoPanel.add(user_IDLabel2);
                     user_IDLabel2.setBounds(130, 10, 150, 25);
 
@@ -752,12 +785,15 @@ public class UserUI extends JFrame {
                     //---- maleRadioButton ----
                     maleRadioButton.setText("男/male");
                     maleRadioButton.setForeground(Color.white);
+                    ButtonGroup buttonGroup = new ButtonGroup();
+                    buttonGroup.add(maleRadioButton);
                     userInfoPanel.add(maleRadioButton);
                     maleRadioButton.setBounds(465, 105, maleRadioButton.getPreferredSize().width, 25);
 
                     //---- femaleRadioButton ----
                     femaleRadioButton.setText("女/female");
                     femaleRadioButton.setForeground(Color.white);
+                    buttonGroup.add(femaleRadioButton);
                     userInfoPanel.add(femaleRadioButton);
                     femaleRadioButton.setBounds(550, 105, femaleRadioButton.getPreferredSize().width, 25);
 
@@ -789,7 +825,34 @@ public class UserUI extends JFrame {
                         public void actionPerformed(ActionEvent e) {
                             // 信息更新提交按钮
                             // 完成
+                            out.println("submitInfoChange");
 
+                            String name = infoNameField.getText();
+                            String meetingName = infoMeetingNameField.getText();
+                            String position = infoPositionField.getText();
+                            String password = infoPasswordField.getText();
+                            String gender = null;
+                            if (maleRadioButton.isSelected()) {
+                                gender = "男";
+                            }else if (femaleRadioButton.isSelected()) {
+                                gender = "女";
+                            }else gender = "undecided";
+                            out.println(name);  // 1
+                            out.println(meetingName);
+                            out.println(position);
+                            out.println(password);
+                            out.println(gender);
+                            out.flush();
+                            try {
+                                String retype = in.readLine();
+                                if (retype.equals("submitChangeSuccess")) {
+                                    JOptionPane.showMessageDialog(null, "更新成功");
+                                }else if (retype.equals("submitChangeFail")) {
+                                    JOptionPane.showMessageDialog(null, "更新失败");
+                                }
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
                         }
                     });
                     userInfoPanel.add(infoUpdateButton);

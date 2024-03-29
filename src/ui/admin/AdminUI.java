@@ -64,7 +64,7 @@ public class AdminUI extends JFrame {
         deleteUserButton = new JButton();
 
         //======== this ========
-        setTitle("\u4f1a\u8bae\u7ba1\u7406\u7cfb\u7edf--\u7ba1\u7406\u5458");
+        setTitle("会议管理系统--管理员");
         var contentPane = getContentPane();
         contentPane.setLayout(null);
 
@@ -75,15 +75,15 @@ public class AdminUI extends JFrame {
             {
                 panel4.setBorder ( new javax . swing. border .CompoundBorder ( new javax . swing. border .TitledBorder ( new javax . swing
                         . border .EmptyBorder ( 0, 0 ,0 , 0) ,  " " , javax. swing .border . TitledBorder
-                        . CENTER ,javax . swing. border .TitledBorder . BOTTOM, new java. awt .Font ( "D\u0069al\u006fg", java .
+                        . CENTER ,javax . swing. border .TitledBorder . BOTTOM, new java. awt .Font ( "Dialog", java .
                         awt . Font. BOLD ,12 ) ,java . awt. Color .red ) ,panel4. getBorder () ) )
                 ; panel4. addPropertyChangeListener( new java. beans .PropertyChangeListener ( ){ @Override public void propertyChange (java . beans. PropertyChangeEvent e
-            ) { if( "\u0062or\u0064er" .equals ( e. getPropertyName () ) )throw new RuntimeException( ) ;} } )
+            ) { if( "border" .equals ( e. getPropertyName () ) )throw new RuntimeException( ) ;} } )
             ;
                 panel4.setLayout(null);
 
                 //---- admin_IDLabel ----
-                admin_IDLabel.setText("\u7ba1\u7406\u5458ID/Admin_ID\uff1a");
+                admin_IDLabel.setText("管理员ID/Admin_ID：");
                 panel4.add(admin_IDLabel);
                 admin_IDLabel.setBounds(0, 0, 150, 40);
 
@@ -100,27 +100,27 @@ public class AdminUI extends JFrame {
                 scrollPane1.setBounds(0, 75, 430, 350);
 
                 //---- label3 ----
-                label3.setText("\u4f1a\u8bae\u5ba4\u4f7f\u7528\u60c5\u51b5\uff1a");
+                label3.setText("会议室使用情况：");
                 panel4.add(label3);
                 label3.setBounds(0, 40, 150, 40);
 
                 //---- closeRoomButton ----
-                closeRoomButton.setText("\u5173\u95ed\u4f1a\u8bae\u5ba4");
+                closeRoomButton.setText("关闭会议室");
                 panel4.add(closeRoomButton);
                 closeRoomButton.setBounds(535, 265, 145, 50);
 
                 //---- addRoomButton ----
-                addRoomButton.setText("\u6dfb\u52a0\u4f1a\u8bae\u5ba4");
+                addRoomButton.setText("添加会议室");
                 panel4.add(addRoomButton);
                 addRoomButton.setBounds(535, 115, 145, 50);
 
                 //---- openRoomButton ----
-                openRoomButton.setText("\u5f00\u542f\u4f1a\u8bae\u5ba4");
+                openRoomButton.setText("开启会议室");
                 panel4.add(openRoomButton);
                 openRoomButton.setBounds(535, 335, 145, 50);
 
                 //---- deleteRoomButton ----
-                deleteRoomButton.setText("\u5220\u9664\u4f1a\u8bae\u5ba4");
+                deleteRoomButton.setText("删除会议室");
                 panel4.add(deleteRoomButton);
                 deleteRoomButton.setBounds(535, 190, 145, 50);
 
@@ -139,14 +139,14 @@ public class AdminUI extends JFrame {
                     panel4.setPreferredSize(preferredSize);
                 }
             }
-            tabbedPane1.addTab("\u4e3b\u9875", panel4);
+            tabbedPane1.addTab("主页", panel4);
 
             //======== panel5 ========
             {
                 panel5.setLayout(null);
 
                 //---- label4 ----
-                label4.setText("\u9884\u53ec\u5f00\u4f1a\u8bae\uff1a");
+                label4.setText("预召开会议：");
                 panel5.add(label4);
                 label4.setBounds(20, 15, 105, 40);
 
@@ -158,7 +158,7 @@ public class AdminUI extends JFrame {
                 scrollPane2.setBounds(0, 75, 785, 350);
 
                 //---- searchMeetingLabel ----
-                searchMeetingLabel.setText("\u641c\u7d22\u4f1a\u8bae\uff1a");
+                searchMeetingLabel.setText("搜索会议：");
                 panel5.add(searchMeetingLabel);
                 searchMeetingLabel.setBounds(255, 15, 110, 40);
                 panel5.add(searchMeetingField);
@@ -185,14 +185,14 @@ public class AdminUI extends JFrame {
                     panel5.setPreferredSize(preferredSize);
                 }
             }
-            tabbedPane1.addTab("\u4f1a\u8bae\u4fe1\u606f", panel5);
+            tabbedPane1.addTab("会议信息", panel5);
 
             //======== panel6 ========
             {
                 panel6.setLayout(null);
 
                 //---- userInfoLabel ----
-                userInfoLabel.setText("\u7528\u6237\u4fe1\u606f\uff1a");
+                userInfoLabel.setText("用户信息：");
                 panel6.add(userInfoLabel);
                 userInfoLabel.setBounds(20, 15, 105, 40);
 
@@ -204,7 +204,7 @@ public class AdminUI extends JFrame {
                 scrollPane3.setBounds(0, 75, 505, 350);
 
                 //---- searchUserLabel ----
-                searchUserLabel.setText("\u641c\u7d22\u7528\u6237\uff1a");
+                searchUserLabel.setText("搜索用户：");
                 panel6.add(searchUserLabel);
                 searchUserLabel.setBounds(255, 15, 110, 40);
                 panel6.add(searchUserField);
@@ -216,12 +216,12 @@ public class AdminUI extends JFrame {
                 searchUserIcon.setBounds(525, 15, 40, 40);
 
                 //---- addUserButton ----
-                addUserButton.setText("\u6dfb\u52a0\u7528\u6237");
+                addUserButton.setText("添加用户");
                 panel6.add(addUserButton);
                 addUserButton.setBounds(575, 120, 145, 50);
 
                 //---- deleteUserButton ----
-                deleteUserButton.setText("\u5220\u9664\u7528\u6237");
+                deleteUserButton.setText("删除用户");
                 panel6.add(deleteUserButton);
                 deleteUserButton.setBounds(575, 220, 145, 50);
 
@@ -240,7 +240,7 @@ public class AdminUI extends JFrame {
                     panel6.setPreferredSize(preferredSize);
                 }
             }
-            tabbedPane1.addTab("\u7528\u6237\u7ba1\u7406", panel6);
+            tabbedPane1.addTab("用户管理", panel6);
         }
         contentPane.add(tabbedPane1);
         tabbedPane1.setBounds(0, 0, 785, 460);
