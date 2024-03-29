@@ -6,9 +6,7 @@ import ui.element.MyJTextField;
 import ui.element.NonEditableTableModel;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.Socket;
@@ -442,8 +440,10 @@ public class UserUI extends JFrame {
                                     ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
                                     TableModel tableModel = (TableModel) inputStream.readObject(); // 接收表格数据
                                     conferenceTable.setModel(tableModel); // 设置表格数据
+                                    conferenceTable.repaint();
                                     TableModel tableModel2 = (TableModel) inputStream.readObject(); // 接收第二个表格数据
                                     conferenceTable2.setModel(tableModel2); // 设置第二个表格数据
+                                    conferenceTable2.repaint();
                                 }
                             } catch (IOException ex) {
                                 throw new RuntimeException(ex);
@@ -515,6 +515,28 @@ public class UserUI extends JFrame {
                             SignInForMeetingJDialog sign = null;
                             try {
                                 sign = new SignInForMeetingJDialog(UserUI.this, select_meeting_ID);
+                                sign.addWindowListener(new WindowAdapter() {
+                                    @Override
+                                    public void windowClosed(WindowEvent e) {
+                                        out.println("resetTable"); // 签到后刷新表格
+                                        out.println(loginUser_id);
+                                        out.flush();
+                                        try {
+                                            ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
+                                            TableModel tableModel = (TableModel) inputStream.readObject(); // 接收表格数据
+                                            conferenceTable.setModel(tableModel); // 设置表格数据
+                                            conferenceTable.repaint();
+                                            TableModel tableModel2 = (TableModel) inputStream.readObject(); // 接收第二个表格数据
+                                            conferenceTable2.setModel(tableModel2); // 设置第二个表格数据
+                                            conferenceTable2.repaint();
+                                        }catch (IOException exception) {
+                                            exception.printStackTrace();
+                                        } catch (ClassNotFoundException ex) {
+                                            throw new RuntimeException(ex);
+                                        }
+                                    }
+                                });
+
                             } catch (IOException ex) {
                                 throw new RuntimeException(ex);
                             } catch (ClassNotFoundException ex) {
@@ -539,6 +561,7 @@ public class UserUI extends JFrame {
                             String select_meeting_ID = (String) conferenceTable2.getValueAt(conferenceTable2.getSelectedRow(), 0);
                             out.println("removeFromMeeting"); // 发送移除标识
                             out.println(select_meeting_ID); // 发送会议id
+                            out.println(loginUser_id);
                             out.flush();
                             try {
                                 String returnType = in.readLine();
@@ -546,12 +569,21 @@ public class UserUI extends JFrame {
                                     System.out.println(returnType);
                                     // 弹出移除成功
                                     JOptionPane.showMessageDialog(null, "移除成功");
+                                    ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
+                                    TableModel tableModel = (TableModel) inputStream.readObject(); // 接收表格数据
+                                    conferenceTable.setModel(tableModel); // 设置表格数据
+                                    conferenceTable.repaint();
+                                    TableModel tableModel2 = (TableModel) inputStream.readObject(); // 接收第二个表格数据
+                                    conferenceTable2.setModel(tableModel2); // 设置第二个表格数据
+                                    conferenceTable2.repaint();
                                 }else if (returnType.equals("removeFail")) {
                                     System.out.println(returnType);
                                     // 弹出移除失败
                                     JOptionPane.showMessageDialog(null, "移除失败");
                                 }
                             } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            } catch (ClassNotFoundException ex) {
                                 throw new RuntimeException(ex);
                             }
                         }
@@ -572,6 +604,22 @@ public class UserUI extends JFrame {
                             ChangeMeetingInfoJFrame changeMeetingInfoJFrame = null;
                             try {
                                 changeMeetingInfoJFrame = new ChangeMeetingInfoJFrame(select_meeting_ID);
+                                out.println("resetTable"); // 签到后刷新表格
+                                out.println(loginUser_id);
+                                out.flush();
+                                try {
+                                    ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
+                                    TableModel tableModel = (TableModel) inputStream.readObject(); // 接收表格数据
+                                    conferenceTable.setModel(tableModel); // 设置表格数据
+                                    conferenceTable.repaint();
+                                    TableModel tableModel2 = (TableModel) inputStream.readObject(); // 接收第二个表格数据
+                                    conferenceTable2.setModel(tableModel2); // 设置第二个表格数据
+                                    conferenceTable2.repaint();
+                                }catch (IOException exception) {
+                                    exception.printStackTrace();
+                                } catch (ClassNotFoundException ex) {
+                                    throw new RuntimeException(ex);
+                                }
                             } catch (IOException ex) {
                                 throw new RuntimeException(ex);
                             }

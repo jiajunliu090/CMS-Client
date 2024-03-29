@@ -150,6 +150,7 @@ public class ChangeMeetingInfoJFrame extends JFrame {
                     out.println(add);
                     out.println(delete);
                     out.println(room_ID);
+                    out.println();
                     out.flush();
                     try {
                         String returnType1 = in.readLine();
