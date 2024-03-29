@@ -8,9 +8,16 @@ import ui.element.FocusableBorderTextField;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 
 public class Register extends JFrame {
+    private Socket socket;
+    private BufferedReader in;
+    private PrintWriter out;
     JTextField userNameField = new FocusableBorderTextField(20);
     JPasswordField passWordField = new FocusableBorderPasswordField(20);
     JPasswordField affirmField = new FocusableBorderPasswordField(20);
@@ -23,7 +30,10 @@ public class Register extends JFrame {
         setBounds(450, 200, 545,540);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
-    public Register(){
+    public Register() throws IOException {
+        socket = new Socket("localhost", 12345);
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out = new PrintWriter(socket.getOutputStream(), true);
         //设置窗口标题
         this.setTitle("注册");
         //设置窗口大小
@@ -80,10 +90,23 @@ public class Register extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (test()) {
-                    System.out.println("注册成功");
+                    out.println("registerUser");
+                    String user_id = userNameField.getText();
+                    String password = passWordField.getText();
+                    String name = nameField.getText();
+                    out.println(user_id);
+                    out.println(password);
+                    out.println(name);
+                    out.flush();
                     Login login = null;
                     try {
-                        login = new Login();
+                        String returnType = in.readLine();
+                        if (returnType.equals("registerSuccess")) {
+                            JOptionPane.showMessageDialog(null, "注册成功");
+                            dispose();
+                            login = new Login();
+                        }else JOptionPane.showMessageDialog(null, "注册失败");
+
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }

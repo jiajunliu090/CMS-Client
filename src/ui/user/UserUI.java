@@ -3,6 +3,7 @@ package ui.user;
 
 import ui.element.FocusButton;
 import ui.element.MyJTextField;
+import ui.element.NonEditableTableModel;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -18,6 +19,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
+import javax.swing.table.TableModel;
 
 public class UserUI extends JFrame {
     private String loginUser_id;
@@ -81,7 +83,7 @@ public class UserUI extends JFrame {
     private FocusButton logOutAccount;
     private FocusButton infoUpdateButton;
 
-    public UserUI(String loginUser_id) throws IOException {
+    public UserUI(String loginUser_id) throws IOException, ClassNotFoundException {
 
         this.loginUser_id = loginUser_id;
         socket = new Socket("localhost", 12345);
@@ -145,9 +147,9 @@ public class UserUI extends JFrame {
         infoUpdateButton = new FocusButton();
         // 加载图片
         try {
-            InputStream stream = UserUI.class.getResourceAsStream("icons8-search-36(1).png");
-            BufferedImage image = ImageIO.read(stream);
-            searchIcon.setIcon(new ImageIcon(image));
+            //InputStream stream = UserUI.class.getResourceAsStream("icons8-search-36(1).png");
+            //BufferedImage image = ImageIO.read(stream);
+            //searchIcon.setIcon(new ImageIcon(image));
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -307,7 +309,15 @@ public class UserUI extends JFrame {
                     {
 
                         //---- conferenceTable ----
-                        //conferenceTable.setModel();
+                        //ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
+                        //outputStream.writeObject("ComingMeetingTable\n"); // 请求获取即将举行的会议表格
+                        out.println("getComingMeetingTable");
+                        out.println(loginUser_id);
+                        out.flush();
+                        ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
+                        TableModel tableModel = (TableModel) inputStream.readObject(); // 接受服务器返回的表格
+
+                        conferenceTable.setModel(tableModel);
                         conferenceTable.setForeground(Color.lightGray);
                         conferenceTable.setBackground(Color.darkGray);
                         conferenceTable.setBorder(new LineBorder(Color.gray, 2, true));
@@ -408,27 +418,39 @@ public class UserUI extends JFrame {
                     createMeetingButton.setForeground(new Color(0x333333));
                     createMeetingButton.addActionListener(new AbstractAction() { // 创建会议
                         @Override
-                        public void actionPerformed(ActionEvent e) {
-                            // 创建会议按钮
-                            // 创建成功弹出对话框
+                        public void actionPerformed(ActionEvent e) { // 创建会议按钮
+                            out.println("createConference");
+                            // 会议创建信息
                             String meeting_id = meeting_IDField.getText();
                             String participants = participantsField.getText();
                             String meeting_time = meetingTimeField.getText();
-                            List<String> participants_name = Arrays.stream(participants.split(",")).toList();
 
-                            //System.out.println("meeting_id : " + meeting_id);
-                            //System.out.println("participants : " + participants);
-                            //System.out.println("meeting_time : " + meeting_time);
-                            //System.out.println(participants_name);
-                            //System.out.println("format_time : " + DateTimeUtils.fromUserInput(meeting_time));
-                            // 先创建会议
+                            // 输出到服务端
+                            out.println(meeting_id);
+                            out.println(participants);
+                            out.println(meeting_time);
+                            out.println(loginUser_id);
+                            out.flush();
 
-                            //if (userService.createConference(meeting_id, room_ID, participants_name, DateTimeUtils.fromUserInput(meeting_time))) {
-                            //    System.out.println("创建成功");
-                            //    // 弹出成功画面
-                            //    CreateMeetingJDialog createMeetingJDialog = new CreateMeetingJDialog(UserUI.this, room_ID);
-                            //    createMeetingJDialog.setVisible(true);
-                            //}
+                            try {
+                                String returnType = in.readLine();
+                                String room_ID = in.readLine();
+                                if (returnType.equals("CreateConferenceSuccess")) {
+                                    // 创建成功打开成功界面
+                                    CreateMeetingJDialog createMeetingJDialog = new CreateMeetingJDialog(UserUI.this, room_ID);
+                                    createMeetingJDialog.setVisible(true);
+                                    ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
+                                    TableModel tableModel = (TableModel) inputStream.readObject(); // 接收表格数据
+                                    conferenceTable.setModel(tableModel); // 设置表格数据
+                                    TableModel tableModel2 = (TableModel) inputStream.readObject(); // 接收第二个表格数据
+                                    conferenceTable2.setModel(tableModel2); // 设置第二个表格数据
+                                }
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            } catch (ClassNotFoundException ex) {
+                                throw new RuntimeException(ex);
+                            }
+
                         }
                     });
                     panel5.add(createMeetingButton);
@@ -459,9 +481,13 @@ public class UserUI extends JFrame {
 
                     //======== scrollPane2 ========
                     {
-
                         //---- conferenceTable2 ----
-                        //conferenceTable2.setModel();
+                        out.println("getConferInfoTable");
+                        out.println(loginUser_id);
+                        out.flush();
+                        ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream()); // 接收信息
+                        TableModel tableModel = (TableModel) inputStream.readObject();
+                        conferenceTable2.setModel(tableModel);
                         conferenceTable2.setForeground(Color.lightGray);
                         conferenceTable2.setBackground(Color.darkGray);
                         conferenceTable2.setBorder(new LineBorder(Color.gray, 2, true));
@@ -482,9 +508,19 @@ public class UserUI extends JFrame {
                     signInButton.setForeground(Color.lightGray);
                     signInButton.addActionListener(new AbstractAction() {
                         @Override
-                        public void actionPerformed(ActionEvent e) {
-                            // 签到按钮
-                            // 弹出验证界面
+                        public void actionPerformed(ActionEvent e) { // 签到按钮
+                            // 查哪个会议是被选中了
+                            String select_meeting_ID = (String) conferenceTable2.getValueAt(conferenceTable2.getSelectedRow(), 0);
+                            // 弹出会议签到
+                            SignInForMeetingJDialog sign = null;
+                            try {
+                                sign = new SignInForMeetingJDialog(UserUI.this, select_meeting_ID);
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            } catch (ClassNotFoundException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                            sign.setVisible(true);
 
                         }
                     });
@@ -499,6 +535,25 @@ public class UserUI extends JFrame {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             // 移除队列按钮
+                            // 弹出是否确定
+                            String select_meeting_ID = (String) conferenceTable2.getValueAt(conferenceTable2.getSelectedRow(), 0);
+                            out.println("removeFromMeeting"); // 发送移除标识
+                            out.println(select_meeting_ID); // 发送会议id
+                            out.flush();
+                            try {
+                                String returnType = in.readLine();
+                                if (returnType.equals("removeSuccess")) {
+                                    System.out.println(returnType);
+                                    // 弹出移除成功
+                                    JOptionPane.showMessageDialog(null, "移除成功");
+                                }else if (returnType.equals("removeFail")) {
+                                    System.out.println(returnType);
+                                    // 弹出移除失败
+                                    JOptionPane.showMessageDialog(null, "移除失败");
+                                }
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
                         }
                     });
                     panel6.add(removeButton);
@@ -513,7 +568,14 @@ public class UserUI extends JFrame {
                         public void actionPerformed(ActionEvent e) {
                             // 更新会议信息
                             // 弹出更新界面
-
+                            String select_meeting_ID = (String) conferenceTable2.getValueAt(conferenceTable2.getSelectedRow(), 0);
+                            ChangeMeetingInfoJFrame changeMeetingInfoJFrame = null;
+                            try {
+                                changeMeetingInfoJFrame = new ChangeMeetingInfoJFrame(select_meeting_ID);
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                            changeMeetingInfoJFrame.setVisible(true);
                         }
                     });
                     panel6.add(updateMeetingButton);
@@ -528,13 +590,20 @@ public class UserUI extends JFrame {
                         public void actionPerformed(ActionEvent e) {
                             // 写评论
                             // 弹出写评论界面
+                            String select_meeting_ID = (String) conferenceTable2.getValueAt(conferenceTable2.getSelectedRow(), 0);
+                            WriteCommentJFrame writeCommentJFrame = null;
+                            try {
+                                writeCommentJFrame = new WriteCommentJFrame(select_meeting_ID);
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                            writeCommentJFrame.setVisible(true);
                         }
                     });
                     panel6.add(writeCommentButton);
                     writeCommentButton.setBounds(560, 215, 120, 40);
 
                     {
-                        // compute preferred size
                         Dimension preferredSize = new Dimension();
                         for (int i = 0; i < panel6.getComponentCount(); i++) {
                             Rectangle bounds = panel6.getComponent(i).getBounds();
@@ -651,7 +720,13 @@ public class UserUI extends JFrame {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             // 注销用户按钮
-
+                            LogOutJDialog logOutJDialog = null;
+                            try {
+                                logOutJDialog = new LogOutJDialog(UserUI.this, loginUser_id);
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                            logOutJDialog.setVisible(true);
                         }
                     });
                     userInfoPanel.add(logOutAccount);

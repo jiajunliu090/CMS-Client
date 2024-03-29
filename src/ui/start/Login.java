@@ -115,6 +115,7 @@ public class Login extends JFrame {
                     String response = null; // 从服务器接收响应
                     try {
                         response = in.readLine();
+                        System.out.println(response);
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }
@@ -124,6 +125,8 @@ public class Login extends JFrame {
                         try {
                             userUI = new UserUI(userName);
                         } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        } catch (ClassNotFoundException ex) {
                             throw new RuntimeException(ex);
                         }
                         userUI.setVisible(true);
@@ -139,7 +142,12 @@ public class Login extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //销毁当前页面
-                Register sign = new Register();
+                Register sign = null;
+                try {
+                    sign = new Register();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
                 sign.setVisible(true);
             }
         });

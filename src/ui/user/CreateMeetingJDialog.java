@@ -91,7 +91,6 @@ public class CreateMeetingJDialog extends JDialog {
         panel1.setBounds(0, 0, 380, 260);
 
         {
-            // compute preferred size
             Dimension preferredSize = new Dimension();
             for(int i = 0; i < contentPane.getComponentCount(); i++) {
                 Rectangle bounds = contentPane.getComponent(i).getBounds();
