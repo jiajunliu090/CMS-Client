@@ -93,6 +93,7 @@ public class Login extends JFrame {
                         AdminUI adminUI = null;
                         try {
                             adminUI = new AdminUI(userNameField.getText());
+                            dispose();
                         } catch (IOException | ClassNotFoundException ex) {
                             throw new RuntimeException(ex);
                         }
@@ -130,6 +131,7 @@ public class Login extends JFrame {
                         UserUI userUI = null;
                         try {
                             userUI = new UserUI(userName);
+                            dispose();
                         } catch (IOException ex) {
                             throw new RuntimeException(ex);
                         } catch (ClassNotFoundException ex) {

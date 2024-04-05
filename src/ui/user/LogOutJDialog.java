@@ -70,7 +70,7 @@ public class LogOutJDialog extends JDialog {
             label2.setBounds(105, 85, 145, 40);
             //---- textField1 ----
             textField1.setForeground(Color.red);
-            textField1.setText("输入：“我同意注销 + user_ID”");
+            textField1.setText("输入：我同意注销 + user_ID");
             panel1.add(textField1);
             textField1.setBounds(105, 135, 235, 30);
 
@@ -81,15 +81,15 @@ public class LogOutJDialog extends JDialog {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     out.println("logOutUser");
+                    out.println(user_ID);
                     out.println(textField1.getText()); // ensure
                     out.flush();
                     try {
                         String returnType = in.readLine();
                         if (returnType.equals("logOutSuccess")) {
                             JOptionPane.showMessageDialog(null, "操作成功");
-                            dispose();
-                            getOwner().dispose();
-                        }else JOptionPane.showMessageDialog(null, "操作失败");
+                            System.exit(0);
+                        }else JOptionPane.showMessageDialog(null, returnType);
                     } catch (IOException ex) {
                         throw new RuntimeException(ex);
                     }

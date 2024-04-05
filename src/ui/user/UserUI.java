@@ -516,14 +516,25 @@ public class UserUI extends JFrame {
                             SignInForMeetingJDialog sign = null;
                             try {
                                 sign = new SignInForMeetingJDialog(UserUI.this, select_meeting_ID);
-                                flushTable();
+                                sign.addWindowListener(new WindowAdapter() {
+                                    @Override
+                                    public void windowClosed(WindowEvent e) {
+                                        super.windowClosed(e);
+                                        try {
+                                            flushTable();
+                                        } catch (IOException ex) {
+                                            throw new RuntimeException(ex);
+                                        } catch (ClassNotFoundException ex) {
+                                            throw new RuntimeException(ex);
+                                        }
+                                    }
+                                });
                             } catch (IOException ex) {
                                 throw new RuntimeException(ex);
                             } catch (ClassNotFoundException ex) {
                                 throw new RuntimeException(ex);
                             }
                             sign.setVisible(true);
-
                         }
                     });
                     panel6.add(signInButton);
@@ -542,17 +553,17 @@ public class UserUI extends JFrame {
                             out.println("removeFromMeeting"); // 发送移除标识
                             out.println(select_meeting_ID); // 发送会议id
                             out.flush();
-
                             try {
                                 String returnType = in.readLine(); // 读取服务器响应
                                 if (returnType.equals("removeSuccess")) {
                                     // 弹出移除成功
                                     JOptionPane.showMessageDialog(null, "移除成功");
+                                    flushTable();
                                 } else if (returnType.equals("removeFail")) {
                                     // 弹出移除失败
                                     JOptionPane.showMessageDialog(null, "移除失败");
                                 }
-                            } catch (IOException ex) {
+                            } catch (IOException | ClassNotFoundException ex) {
                                 throw new RuntimeException(ex);
                             }
                         }
@@ -573,7 +584,19 @@ public class UserUI extends JFrame {
                             ChangeMeetingInfoJFrame changeMeetingInfoJFrame = null;
                             try {
                                 changeMeetingInfoJFrame = new ChangeMeetingInfoJFrame(select_meeting_ID);
-
+                                changeMeetingInfoJFrame.addWindowListener(new WindowAdapter() {
+                                    @Override
+                                    public void windowClosed(WindowEvent e) {
+                                        super.windowClosed(e);
+                                        try {
+                                            flushTable();
+                                        } catch (IOException ex) {
+                                            throw new RuntimeException(ex);
+                                        } catch (ClassNotFoundException ex) {
+                                            throw new RuntimeException(ex);
+                                        }
+                                    }
+                                });
                             } catch (IOException ex) {
                                 throw new RuntimeException(ex);
                             }
@@ -875,7 +898,7 @@ public class UserUI extends JFrame {
         JOptionPane.showMessageDialog(this, "未查找到该会议");
     }
     private void flushTable() throws IOException, ClassNotFoundException {
-        out.println("tableFlush");
+        out.println("user_tableFlush");
         out.println(loginUser_id);
         out.flush();
         objectInputStream = new ObjectInputStream(socket.getInputStream());

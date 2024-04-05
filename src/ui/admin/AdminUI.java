@@ -8,8 +8,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.table.TableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.Socket;
@@ -155,6 +154,13 @@ public class AdminUI extends JFrame {
                         }
                         if (returnType.equals("Room closed")) {
                             JOptionPane.showMessageDialog(null, "关闭成功");
+                            try {
+                                flushTable();
+                            } catch (IOException ex) {
+                                throw new RuntimeException(ex);
+                            } catch (ClassNotFoundException ex) {
+                                throw new RuntimeException(ex);
+                            }
                         }else JOptionPane.showMessageDialog(null, "关闭错误");
                     }
                 });
@@ -169,6 +175,19 @@ public class AdminUI extends JFrame {
                         try {
                             AddRoomJDialog addRoomJDialog = new AddRoomJDialog(AdminUI.this);
                             addRoomJDialog.setVisible(true);
+                            addRoomJDialog.addWindowListener(new WindowAdapter() {
+                                @Override
+                                public void windowClosed(WindowEvent e) {
+                                    super.windowClosed(e);
+                                    try {
+                                        flushTable();
+                                    } catch (IOException ex) {
+                                        throw new RuntimeException(ex);
+                                    } catch (ClassNotFoundException ex) {
+                                        throw new RuntimeException(ex);
+                                    }
+                                }
+                            });
                         } catch (IOException ex) {
                             throw new RuntimeException(ex);
                         }
@@ -190,7 +209,8 @@ public class AdminUI extends JFrame {
                         try {
                             returnType = in.readLine();
                             JOptionPane.showMessageDialog(null, returnType);
-                        } catch (IOException ex) {
+                            flushTable();
+                        } catch (IOException | ClassNotFoundException ex) {
                             throw new RuntimeException(ex);
                         }
                     }
@@ -211,6 +231,7 @@ public class AdminUI extends JFrame {
                         try {
                             returnType = in.readLine();
                             JOptionPane.showMessageDialog(null, returnType);
+                            flushTable();
                         }catch (Exception e1) {
                             e1.printStackTrace();
                         }
@@ -265,7 +286,50 @@ public class AdminUI extends JFrame {
                 InputStream stream = new FileInputStream(file);
                 BufferedImage image = ImageIO.read(stream);
                 searchMeetingIcon.setIcon(new ImageIcon(image));
+                searchMeetingIcon.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        searchMeetingIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        searchMeetingIcon.setCursor(Cursor.getDefaultCursor());
+                    }
+
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        if (searchMeetingField.getText() == null || searchMeetingField.getText().equals("")) {
+                            JOptionPane.showMessageDialog(null, "请输入会议ID再搜索");
+                        }else {
+                            String searchMeeting_ID = searchMeetingField.getText();
+                            searchMeeting(searchMeeting_ID);
+                        }
+                    }
+                });
+
                 searchUserIcon.setIcon(new ImageIcon(image));
+                searchUserIcon.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent e) {
+                        searchUserIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        searchUserIcon.setCursor(Cursor.getDefaultCursor());
+                    }
+
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        if (searchUserField.getText() == null || searchUserField.getText().equals("")) {
+                            JOptionPane.showMessageDialog(null, "请输入用户ID再搜索");
+                        }else {
+                            String searchUser_ID = searchUserField.getText();
+                            searchUser(searchUser_ID);
+                        }
+                    }
+                });
                 panel5.add(searchMeetingIcon);
                 searchMeetingIcon.setBounds(525, 15, 40, 40);
 
@@ -326,7 +390,8 @@ public class AdminUI extends JFrame {
                         try {
                             returnType = in.readLine();
                             JOptionPane.showMessageDialog(null, returnType);
-                        } catch (IOException ex) {
+                            flushTable();
+                        } catch (IOException | ClassNotFoundException ex) {
                             throw new RuntimeException(ex);
                         }
                     }
@@ -370,5 +435,48 @@ public class AdminUI extends JFrame {
         }
         pack();
         setLocationRelativeTo(getOwner());
+    }
+
+    private void searchMeeting(String text) {
+        for (int row = 0; row < meetingInfoTable.getRowCount(); row++) {
+            Object cellValue = meetingInfoTable.getValueAt(row, 0); // 获取当前行会议ID列的值
+            if (cellValue != null && cellValue.toString().toLowerCase().equals(text)) {
+                meetingInfoTable.getSelectionModel().setSelectionInterval(row, row);
+                meetingInfoTable.scrollRectToVisible(meetingInfoTable.getCellRect(row, 0, true));
+                return;
+            }
+        }
+        JOptionPane.showMessageDialog(this, "未查找到该会议");
+    }
+
+    private void searchUser(String text) {
+        for (int row = 0; row < userInfoTable.getRowCount(); row++) {
+            Object cellValue = userInfoTable.getValueAt(row, 0); // 获取当前行会议ID列的值
+            if (cellValue != null && cellValue.toString().toLowerCase().equals(text)) {
+                userInfoTable.getSelectionModel().setSelectionInterval(row, row);
+                userInfoTable.scrollRectToVisible(userInfoTable.getCellRect(row, 0, true));
+                return;
+            }
+        }
+        JOptionPane.showMessageDialog(this, "未找到该用户");
+    }
+
+
+    private void flushTable() throws IOException , ClassNotFoundException{
+        out.println("admin_flushTable");
+        out.flush();
+        objectInputStream = new ObjectInputStream(socket.getInputStream());
+        TableModel tableModel = (TableModel) objectInputStream.readObject();
+        TableModel tableModel1 = (TableModel) objectInputStream.readObject();
+        TableModel tableModel2 = (TableModel) objectInputStream.readObject();
+
+        roomInfoTable.setModel(tableModel);
+        roomInfoTable.repaint();
+
+        meetingInfoTable.setModel(tableModel1);
+        meetingInfoTable.repaint();
+
+        userInfoTable.setModel(tableModel2);
+        userInfoTable.repaint();
     }
 }
