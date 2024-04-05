@@ -19,11 +19,13 @@ import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.table.TableModel;
 
+
 public class UserUI extends JFrame {
     private String loginUser_id;
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
+    private ObjectInputStream objectInputStream;
     private JTabbedPane tabbedPane1;
     private JPanel StartPanel;
     private JPanel panel3;
@@ -87,6 +89,7 @@ public class UserUI extends JFrame {
         socket = new Socket("localhost", 12345);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         out = new PrintWriter(socket.getOutputStream(), true);
+
         tabbedPane1 = new JTabbedPane();
         StartPanel = new JPanel();
         panel3 = new JPanel();
@@ -145,9 +148,10 @@ public class UserUI extends JFrame {
         infoUpdateButton = new FocusButton();
         // 加载图片
         try {
-            //InputStream stream = UserUI.class.getResourceAsStream("icons8-search-36(1).png");
-            //BufferedImage image = ImageIO.read(stream);
-            //searchIcon.setIcon(new ImageIcon(image));
+            File file = new File("src/ui/resources/statics/image/icons8-search-36(1).png");
+            InputStream stream = new FileInputStream(file);
+            BufferedImage image = ImageIO.read(stream);
+            searchIcon.setIcon(new ImageIcon(image));
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -207,7 +211,7 @@ public class UserUI extends JFrame {
                     }
                     nameLabel2.setForeground(Color.lightGray);
                     panel3.add(nameLabel2);
-                    nameLabel2.setBounds(255, 30, 75, 30);
+                    nameLabel2.setBounds(255, 30, 100, 30);
 
                     //---- meetingNameLabel2 ----
                     out.println("getLoginUser_meetingName"); // 发送会议昵称获取标识
@@ -219,7 +223,7 @@ public class UserUI extends JFrame {
                     }
                     meetingNameLabel2.setForeground(Color.lightGray);
                     panel3.add(meetingNameLabel2);
-                    meetingNameLabel2.setBounds(255, 75, 75, 30);
+                    meetingNameLabel2.setBounds(255, 75, 100, 30);
 
                     //---- positionLabel2 ----
                     out.println("getLoginUser_position");
@@ -231,7 +235,7 @@ public class UserUI extends JFrame {
                     }
                     positionLabel2.setForeground(Color.lightGray);
                     panel3.add(positionLabel2);
-                    positionLabel2.setBounds(255, 120, 75, 30);
+                    positionLabel2.setBounds(255, 120, 100, 30);
 
                     //---- timeLabel ----
                     timeLabel.setText("当前时间/Current Time:");
@@ -252,8 +256,13 @@ public class UserUI extends JFrame {
                     searchIcon.addMouseListener(new MouseAdapter() {
                         @Override
                         public void mouseClicked(MouseEvent e) {
-                            // 更新表格为搜索后的
-
+                            // 根据会议id更新表格为搜索后的
+                            if (searchField.getText() == null || searchField.getText().equals("")) {
+                                JOptionPane.showMessageDialog(null, "请输入会议ID再搜索");
+                            }else {
+                                String searchMeeting_ID = searchField.getText();
+                                search(searchMeeting_ID);
+                            }
                         }
                         @Override
                         public void mouseEntered(MouseEvent e) {
@@ -307,8 +316,6 @@ public class UserUI extends JFrame {
                     {
 
                         //---- conferenceTable ----
-                        //ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
-                        //outputStream.writeObject("ComingMeetingTable\n"); // 请求获取即将举行的会议表格
                         out.println("getComingMeetingTable");
                         out.println(loginUser_id);
                         out.flush();
@@ -427,26 +434,20 @@ public class UserUI extends JFrame {
                             out.println(meeting_id);
                             out.println(participants);
                             out.println(meeting_time);
-                            out.println(loginUser_id);
                             out.flush();
 
                             try {
-                                String returnType = in.readLine();
+                                String returnType = in.readLine(); // 读操作
                                 String room_ID = in.readLine();
                                 if (returnType.equals("CreateConferenceSuccess")) {
                                     // 创建成功打开成功界面
                                     CreateMeetingJDialog createMeetingJDialog = new CreateMeetingJDialog(UserUI.this, room_ID);
                                     createMeetingJDialog.setVisible(true);
-                                    ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-                                    TableModel tableModel = (TableModel) inputStream.readObject(); // 接收表格数据
-                                    conferenceTable.setModel(tableModel); // 设置表格数据
-                                    conferenceTable.repaint();
-                                    TableModel tableModel2 = (TableModel) inputStream.readObject(); // 接收第二个表格数据
-                                    conferenceTable2.setModel(tableModel2); // 设置第二个表格数据
-                                    conferenceTable2.repaint();
+                                    flushTable();
                                 }
+
                             } catch (IOException ex) {
-                                throw new RuntimeException(ex);
+                                ex.printStackTrace();
                             } catch (ClassNotFoundException ex) {
                                 throw new RuntimeException(ex);
                             }
@@ -485,7 +486,7 @@ public class UserUI extends JFrame {
                         out.println("getConferInfoTable");
                         out.println(loginUser_id);
                         out.flush();
-                        ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream()); // 接收信息
+                        ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream()); // 接收信息 // client 484
                         TableModel tableModel = (TableModel) inputStream.readObject();
                         conferenceTable2.setModel(tableModel);
                         conferenceTable2.setForeground(Color.lightGray);
@@ -515,28 +516,7 @@ public class UserUI extends JFrame {
                             SignInForMeetingJDialog sign = null;
                             try {
                                 sign = new SignInForMeetingJDialog(UserUI.this, select_meeting_ID);
-                                sign.addWindowListener(new WindowAdapter() {
-                                    @Override
-                                    public void windowClosed(WindowEvent e) {
-                                        out.println("resetTable"); // 签到后刷新表格
-                                        out.println(loginUser_id);
-                                        out.flush();
-                                        try {
-                                            ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-                                            TableModel tableModel = (TableModel) inputStream.readObject(); // 接收表格数据
-                                            conferenceTable.setModel(tableModel); // 设置表格数据
-                                            conferenceTable.repaint();
-                                            TableModel tableModel2 = (TableModel) inputStream.readObject(); // 接收第二个表格数据
-                                            conferenceTable2.setModel(tableModel2); // 设置第二个表格数据
-                                            conferenceTable2.repaint();
-                                        }catch (IOException exception) {
-                                            exception.printStackTrace();
-                                        } catch (ClassNotFoundException ex) {
-                                            throw new RuntimeException(ex);
-                                        }
-                                    }
-                                });
-
+                                flushTable();
                             } catch (IOException ex) {
                                 throw new RuntimeException(ex);
                             } catch (ClassNotFoundException ex) {
@@ -568,27 +548,11 @@ public class UserUI extends JFrame {
                                 if (returnType.equals("removeSuccess")) {
                                     // 弹出移除成功
                                     JOptionPane.showMessageDialog(null, "移除成功");
-
-                                    out.println("resetTable");
-                                    out.println(loginUser_id);
-                                    out.flush();
-                                    // 接收表格数据
-                                    ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-                                    TableModel tableModel = (TableModel) inputStream.readObject();
-                                    conferenceTable.setModel(tableModel);
-                                    conferenceTable.repaint();
-
-                                    // 接收第二个表格数据
-                                    TableModel tableModel2 = (TableModel) inputStream.readObject();
-                                    conferenceTable2.setModel(tableModel2);
-                                    conferenceTable2.repaint();
                                 } else if (returnType.equals("removeFail")) {
                                     // 弹出移除失败
                                     JOptionPane.showMessageDialog(null, "移除失败");
                                 }
                             } catch (IOException ex) {
-                                throw new RuntimeException(ex);
-                            } catch (ClassNotFoundException ex) {
                                 throw new RuntimeException(ex);
                             }
                         }
@@ -609,22 +573,7 @@ public class UserUI extends JFrame {
                             ChangeMeetingInfoJFrame changeMeetingInfoJFrame = null;
                             try {
                                 changeMeetingInfoJFrame = new ChangeMeetingInfoJFrame(select_meeting_ID);
-                                out.println("resetTable"); // 签到后刷新表格
-                                out.println(loginUser_id);
-                                out.flush();
-                                try {
-                                    ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-                                    TableModel tableModel = (TableModel) inputStream.readObject(); // 接收表格数据
-                                    conferenceTable.setModel(tableModel); // 设置表格数据
-                                    conferenceTable.repaint();
-                                    TableModel tableModel2 = (TableModel) inputStream.readObject(); // 接收第二个表格数据
-                                    conferenceTable2.setModel(tableModel2); // 设置第二个表格数据
-                                    conferenceTable2.repaint();
-                                }catch (IOException exception) {
-                                    exception.printStackTrace();
-                                } catch (ClassNotFoundException ex) {
-                                    throw new RuntimeException(ex);
-                                }
+
                             } catch (IOException ex) {
                                 throw new RuntimeException(ex);
                             }
@@ -912,5 +861,29 @@ public class UserUI extends JFrame {
         }
         pack();
         setLocationRelativeTo(getOwner());
+    }
+    // 搜索并高亮匹配的行
+    private void search(String text) {
+        for (int row = 0; row < conferenceTable.getRowCount(); row++) {
+            Object cellValue = conferenceTable.getValueAt(row, 0); // 获取当前行会议ID列的值
+            if (cellValue != null && cellValue.toString().toLowerCase().equals(text)) {
+                conferenceTable.getSelectionModel().setSelectionInterval(row, row);
+                conferenceTable.scrollRectToVisible(conferenceTable.getCellRect(row, 0, true));
+                return;
+            }
+        }
+        JOptionPane.showMessageDialog(this, "未查找到该会议");
+    }
+    private void flushTable() throws IOException, ClassNotFoundException {
+        out.println("tableFlush");
+        out.println(loginUser_id);
+        out.flush();
+        objectInputStream = new ObjectInputStream(socket.getInputStream());
+        TableModel tableModel1 = (TableModel) objectInputStream.readObject();
+        TableModel tableModel2 = (TableModel) objectInputStream.readObject();
+        conferenceTable.setModel(tableModel1);
+        conferenceTable.repaint();
+        conferenceTable2.setModel(tableModel2);
+        conferenceTable2.repaint();
     }
 }

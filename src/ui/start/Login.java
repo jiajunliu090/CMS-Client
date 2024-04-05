@@ -50,6 +50,7 @@ public class Login extends JFrame {
         root.add(jLabel2);
         root.add(jLabel3);
         //
+
         FocusButton managerLogin = new FocusButton("管理员登录");
         FocusButton userLogin = new FocusButton("用户登录");
         FocusButton Sign = new FocusButton("注册");
@@ -89,7 +90,12 @@ public class Login extends JFrame {
                     }
                     if ("LoginSuccess".equals(response)) {
                         // 管理员登录成功，执行下一步操作
-                        AdminUI adminUI = new AdminUI();
+                        AdminUI adminUI = null;
+                        try {
+                            adminUI = new AdminUI(userNameField.getText());
+                        } catch (IOException | ClassNotFoundException ex) {
+                            throw new RuntimeException(ex);
+                        }
                         adminUI.setVisible(true);
                         adminUI.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
                     } else {

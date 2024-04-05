@@ -1,10 +1,25 @@
 package ui.admin;
 
 
+import ui.element.FocusButton;
+import ui.element.MyJTextField;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.table.TableModel;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.net.Socket;
 
 public class AdminUI extends JFrame {
+    private String loginAdmin_id;
+    private Socket socket;
+    private BufferedReader in;
+    private PrintWriter out;
+    private ObjectInputStream objectInputStream;
 
     private JTabbedPane tabbedPane1;
     private JPanel panel4;
@@ -13,55 +28,74 @@ public class AdminUI extends JFrame {
     private JScrollPane scrollPane1;
     private JTable roomInfoTable;
     private JLabel label3;
-    private JButton closeRoomButton;
-    private JButton addRoomButton;
-    private JButton openRoomButton;
-    private JButton deleteRoomButton;
+    private FocusButton closeRoomButton;
+    private FocusButton addRoomButton;
+    private FocusButton openRoomButton;
+    private FocusButton deleteRoomButton;
     private JPanel panel5;
     private JLabel label4;
     private JScrollPane scrollPane2;
     private JTable meetingInfoTable;
     private JLabel searchMeetingLabel;
-    private JTextField searchMeetingField;
+    private MyJTextField searchMeetingField;
     private JLabel searchMeetingIcon;
     private JPanel panel6;
     private JLabel userInfoLabel;
     private JScrollPane scrollPane3;
     private JTable userInfoTable;
     private JLabel searchUserLabel;
-    private JTextField searchUserField;
+    private MyJTextField searchUserField;
     private JLabel searchUserIcon;
-    private JButton addUserButton;
-    private JButton deleteUserButton;
-    public AdminUI() {
+    private FocusButton addUserButton;
+    private FocusButton deleteUserButton;
+    public AdminUI(String loginAdmin_id) throws IOException, ClassNotFoundException {
+        this.loginAdmin_id = loginAdmin_id;
+        socket = new Socket("localhost", 12345);
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out = new PrintWriter(socket.getOutputStream(), true);
 
         tabbedPane1 = new JTabbedPane();
         panel4 = new JPanel();
         admin_IDLabel = new JLabel();
         admin_IDLabel2 = new JLabel();
         scrollPane1 = new JScrollPane();
+        out.println("admin_getRoomInfoTable");
+        out.flush();
+        ObjectInputStream objectInputStream1 = new ObjectInputStream(socket.getInputStream());
+        TableModel model1 = (TableModel) objectInputStream1.readObject();
         roomInfoTable = new JTable();
+        roomInfoTable.setModel(model1);
         label3 = new JLabel();
-        closeRoomButton = new JButton();
-        addRoomButton = new JButton();
-        openRoomButton = new JButton();
-        deleteRoomButton = new JButton();
+        closeRoomButton = new FocusButton();
+        addRoomButton = new FocusButton();
+        openRoomButton = new FocusButton();
+        deleteRoomButton = new FocusButton();
         panel5 = new JPanel();
         label4 = new JLabel();
         scrollPane2 = new JScrollPane();
         meetingInfoTable = new JTable();
+        out.println("admin_getMeetingInfoTable");
+        out.flush();
+        ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream());
+        TableModel model = (TableModel) objectInputStream.readObject();
+        meetingInfoTable.setModel(model);
         searchMeetingLabel = new JLabel();
-        searchMeetingField = new JTextField();
+        searchMeetingField = new MyJTextField();
         searchMeetingIcon = new JLabel();
         panel6 = new JPanel();
         userInfoLabel = new JLabel();
         scrollPane3 = new JScrollPane();
+        out.println("admin_getUserInfoTable");
+        out.flush();
+        ObjectInputStream objectInputStream3 = new ObjectInputStream(socket.getInputStream());
+        TableModel model3 = (TableModel) objectInputStream3.readObject();
         userInfoTable = new JTable();
+        userInfoTable.setModel(model3);
         searchUserLabel = new JLabel();
-        searchUserField = new JTextField();
+        searchUserField = new MyJTextField();
         searchUserIcon = new JLabel();
-        addUserButton = new JButton();
-        deleteUserButton = new JButton();
+        addUserButton = new FocusButton();
+        deleteUserButton = new FocusButton();
 
         //======== this ========
         setTitle("会议管理系统--管理员");
@@ -88,7 +122,7 @@ public class AdminUI extends JFrame {
                 admin_IDLabel.setBounds(0, 0, 150, 40);
 
                 //---- admin_IDLabel2 ----
-                admin_IDLabel2.setText("text");
+                admin_IDLabel2.setText(this.loginAdmin_id);
                 panel4.add(admin_IDLabel2);
                 admin_IDLabel2.setBounds(160, 0, 100, 40);
 
@@ -106,21 +140,82 @@ public class AdminUI extends JFrame {
 
                 //---- closeRoomButton ----
                 closeRoomButton.setText("关闭会议室");
+                closeRoomButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        out.println("admin_closeRoomButton");
+                        String select_room_id = (String) roomInfoTable.getValueAt(roomInfoTable.getSelectedRow(), 0);
+                        out.println(select_room_id);
+                        out.flush();
+                        String returnType = null;
+                        try {
+                            returnType = in.readLine();
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                        if (returnType.equals("Room closed")) {
+                            JOptionPane.showMessageDialog(null, "关闭成功");
+                        }else JOptionPane.showMessageDialog(null, "关闭错误");
+                    }
+                });
                 panel4.add(closeRoomButton);
                 closeRoomButton.setBounds(535, 265, 145, 50);
 
                 //---- addRoomButton ----
                 addRoomButton.setText("添加会议室");
+                addRoomButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        try {
+                            AddRoomJDialog addRoomJDialog = new AddRoomJDialog(AdminUI.this);
+                            addRoomJDialog.setVisible(true);
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                });
                 panel4.add(addRoomButton);
                 addRoomButton.setBounds(535, 115, 145, 50);
 
                 //---- openRoomButton ----
                 openRoomButton.setText("开启会议室");
+                openRoomButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        out.println("admin_openRoomButton");
+                        String select_room_id = (String) roomInfoTable.getValueAt(roomInfoTable.getSelectedRow(), 0);
+                        out.println(select_room_id);
+                        out.flush();
+                        String returnType = null;
+                        try {
+                            returnType = in.readLine();
+                            JOptionPane.showMessageDialog(null, returnType);
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                });
                 panel4.add(openRoomButton);
                 openRoomButton.setBounds(535, 335, 145, 50);
 
                 //---- deleteRoomButton ----
                 deleteRoomButton.setText("删除会议室");
+                deleteRoomButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        out.println("admin_deleteRoomButton");
+                        String select_room_id = (String) roomInfoTable.getValueAt(roomInfoTable.getSelectedRow(), 0);
+                        out.println(select_room_id);
+                        out.flush();
+                        String returnType = null;
+                        try {
+                            returnType = in.readLine();
+                            JOptionPane.showMessageDialog(null, returnType);
+                        }catch (Exception e1) {
+                            e1.printStackTrace();
+                        }
+                    }
+                });
                 panel4.add(deleteRoomButton);
                 deleteRoomButton.setBounds(535, 190, 145, 50);
 
@@ -166,7 +261,11 @@ public class AdminUI extends JFrame {
 
                 //---- searchMeetingIcon ----
 
-                searchMeetingIcon.setIcon(new ImageIcon(String.valueOf(AdminUI.class.getResourceAsStream("/image/icons8-search-32(1).png"))));
+                File file = new File("src/ui/resources/statics/image/icons8-search-32(1).png");
+                InputStream stream = new FileInputStream(file);
+                BufferedImage image = ImageIO.read(stream);
+                searchMeetingIcon.setIcon(new ImageIcon(image));
+                searchUserIcon.setIcon(new ImageIcon(image));
                 panel5.add(searchMeetingIcon);
                 searchMeetingIcon.setBounds(525, 15, 40, 40);
 
@@ -211,17 +310,27 @@ public class AdminUI extends JFrame {
                 searchUserField.setBounds(370, 20, 150, 30);
 
                 //---- searchUserIcon ----
-                searchUserIcon.setIcon(new ImageIcon(String.valueOf(AdminUI.class.getResourceAsStream("/image/icons8-search-32(1).png"))));
                 panel6.add(searchUserIcon);
                 searchUserIcon.setBounds(525, 15, 40, 40);
 
-                //---- addUserButton ----
-                addUserButton.setText("添加用户");
-                panel6.add(addUserButton);
-                addUserButton.setBounds(575, 120, 145, 50);
-
                 //---- deleteUserButton ----
                 deleteUserButton.setText("删除用户");
+                deleteUserButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        out.println("admin_deleteUser");
+                        String select_user_id = (String) userInfoTable.getValueAt(userInfoTable.getSelectedRow(), 0);
+                        out.println(select_user_id);
+                        out.flush();
+                        String returnType = null;
+                        try {
+                            returnType = in.readLine();
+                            JOptionPane.showMessageDialog(null, returnType);
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                });
                 panel6.add(deleteUserButton);
                 deleteUserButton.setBounds(575, 220, 145, 50);
 
