@@ -423,36 +423,41 @@ public class UserUI extends JFrame {
                     createMeetingButton.setForeground(new Color(0x333333));
                     createMeetingButton.addActionListener(new AbstractAction() { // 创建会议
                         @Override
-                        public void actionPerformed(ActionEvent e) { // 创建会议按钮
-                            out.println("createConference");
+                        public void actionPerformed(ActionEvent e) { // 创建会议按扭
                             // 会议创建信息
                             String meeting_id = meeting_IDField.getText();
                             String participants = participantsField.getText();
                             String meeting_time = meetingTimeField.getText();
-
-                            // 输出到服务端
-                            out.println(meeting_id);
-                            out.println(participants);
-                            out.println(meeting_time);
-                            out.flush();
-
-                            try {
-                                String returnType = in.readLine(); // 读操作
-                                String room_ID = in.readLine();
-                                if (returnType.equals("CreateConferenceSuccess")) {
-                                    // 创建成功打开成功界面
-                                    CreateMeetingJDialog createMeetingJDialog = new CreateMeetingJDialog(UserUI.this, room_ID);
-                                    createMeetingJDialog.setVisible(true);
-                                    flushTable();
+                            if (meeting_id == null || meeting_time == null || participants == null) {
+                                JOptionPane.showMessageDialog(null, "请输入信息再进行创建!");
+                            }
+                            else if (meeting_id.equals("") || participants.equals("") || meeting_time.equals("")) {
+                                JOptionPane.showMessageDialog(null, "请输入信息再进行创建!");
+                            }else {
+                                // 输出到服务端
+                                out.println("createConference");
+                                out.println(meeting_id);
+                                out.println(participants);
+                                out.println(meeting_time);
+                                out.flush();
+                                try {
+                                    String returnType = in.readLine(); // 读操作
+                                    String room_ID = in.readLine();
+                                    if (returnType.equals("CreateConferenceSuccess")) {
+                                        // 创建成功打开成功界面
+                                        CreateMeetingJDialog createMeetingJDialog = new CreateMeetingJDialog(UserUI.this, room_ID);
+                                        createMeetingJDialog.setVisible(true);
+                                        flushTable();
+                                    }
+                                } catch (IOException ex) {
+                                    ex.printStackTrace();
+                                } catch (ClassNotFoundException ex) {
+                                    throw new RuntimeException(ex);
                                 }
 
-                            } catch (IOException ex) {
-                                ex.printStackTrace();
-                            } catch (ClassNotFoundException ex) {
-                                throw new RuntimeException(ex);
                             }
-
                         }
+
                     });
                     panel5.add(createMeetingButton);
                     createMeetingButton.setBounds(300, 155, 121, createMeetingButton.getPreferredSize().height);
@@ -819,6 +824,9 @@ public class UserUI extends JFrame {
                                 String retype = in.readLine();
                                 if (retype.equals("submitChangeSuccess")) {
                                     JOptionPane.showMessageDialog(null, "更新成功");
+                                    meetingNameLabel2.setText(meetingName);
+                                    nameLabel2.setText(name);
+                                    positionLabel2.setText(position);
                                 }else if (retype.equals("submitChangeFail")) {
                                     JOptionPane.showMessageDialog(null, "更新失败");
                                 }
